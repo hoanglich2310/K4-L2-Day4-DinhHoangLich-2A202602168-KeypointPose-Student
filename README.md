@@ -21,10 +21,10 @@ phần ba của nhãn, và nó quyết định khớp đó có được tính đ
 Lab có **một route bắt buộc**: 20 ảnh `person` COCO-17. Ba bộ dưới đây có vai trò khác nhau;
 không đổi chỗ cho nhau.
 
-| Bộ dữ liệu | Ở đâu | Bạn làm gì | Có train / nộp? |
-| --- | --- | --- | --- |
-| **Core: 20 ảnh chưa nhãn** | `dataset/images/train/` | Tạo một task CVAT `person` 17 điểm, gán tất cả người trong ảnh, export và chuyển thành nhãn YOLO Pose | **Có** |
-| **Test: 10 ảnh đã có nhãn** | `dataset/images/test/`, `dataset/labels/test/` | Chỉ dùng để đánh giá model trong notebook | **Không sửa, không train** |
+| Bộ dữ liệu                          | Ở đâu                                           | Bạn làm gì                                                                                                        | Có train / nộp?                   |
+| -------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| **Core: 20 ảnh chưa nhãn**    | `dataset/images/train/`                          | Tạo một task CVAT`person` 17 điểm, gán tất cả người trong ảnh, export và chuyển thành nhãn YOLO Pose | **Có**                       |
+| **Test: 10 ảnh đã có nhãn** | `dataset/images/test/`, `dataset/labels/test/` | Chỉ dùng để đánh giá model trong notebook                                                                     | **Không sửa, không train** |
 
 Không có bài hand/face trong bản phát hành này. Đừng tự tạo skeleton thứ hai hoặc thêm thư mục
 export thứ hai: repo chưa phát hành input và schema có thể kiểm chứng cho phần đó.
@@ -44,16 +44,16 @@ Sau lab, bạn có thể:
 
 ## Bài nộp
 
-| Tệp | Nội dung |
-| --- | --- |
-| `dataset/labels/train/*.txt` | nhãn 20 ảnh train, định dạng Ultralytics YOLO Pose (56 số/dòng) |
-| `annotations/coco_keypoints/person_keypoints_default.json` | đúng bản export **COCO Keypoints 1.0** từ CVAT |
-| `reports/visibility_report.md`, `outputs/visibility_report.json` | bảng đếm cờ theo từng khớp |
-| `GUIDELINE_MINI.md` | luật của nhóm bạn + ít nhất ba ca mơ hồ đã gặp và cách quyết |
-| `outputs/eval_vs_gold.json` | kết quả chấm với gold (sau khi protected release mở) |
-| `outputs/eval_model.json` | số liệu model trước/sau fine-tune, từ notebook |
-| `reports/REPORT.md` | báo cáo, điền từ `reports/REPORT_TEMPLATE.md` |
-| `reports/review_partner.md` | lỗi tìm được trong bài người khác + reviewer checklist đã điền |
+| Tệp                                                                 | Nội dung                                                                   |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `dataset/labels/train/*.txt`                                       | nhãn 20 ảnh train, định dạng Ultralytics YOLO Pose (56 số/dòng)      |
+| `annotations/coco_keypoints/person_keypoints_default.json`         | đúng bản export**COCO Keypoints 1.0** từ CVAT                     |
+| `reports/visibility_report.md`, `outputs/visibility_report.json` | bảng đếm cờ theo từng khớp                                            |
+| `GUIDELINE_MINI.md`                                                | luật của nhóm bạn + ít nhất ba ca mơ hồ đã gặp và cách quyết  |
+| `outputs/eval_vs_gold.json`                                        | kết quả chấm với gold (sau khi protected release mở)                   |
+| `outputs/eval_model.json`                                          | số liệu model trước/sau fine-tune, từ notebook                         |
+| `reports/REPORT.md`                                                | báo cáo, điền từ`reports/REPORT_TEMPLATE.md`                         |
+| `reports/review_partner.md`                                        | lỗi tìm được trong bài người khác + reviewer checklist đã điền |
 
 Đọc [GUIDE.md](GUIDE.md) theo thứ tự thao tác và đối chiếu [RUBRIC.md](RUBRIC.md) trước khi nộp.
 
@@ -123,3 +123,37 @@ Hệ quả, và nó là cố ý:
   không phải hai bức ảnh khác nhau.
 - `tools/check_pose_labels.py` chạy trên chính gold cũng in ra cảnh báo vì lý do này.
   Lớp sẽ dùng nó làm ví dụ.
+
+
+- Warm up, kiểm tra task
+
+```Python
+python3 tools/coco_kp_to_yolo_pose.py --coco annotations/coco_keypoints/person_keypoints_default.json --out dataset/labels/train
+
+python3 tools/check_pose_labels.py --images dataset/images/train --labels dataset/labels/train
+```
+
+- Chạy lượt kiểm tra hình dáng
+
+```Python
+python3 tools/visualize_pose.py --images dataset/images/train --labels dataset/labels/train --out outputs/vis_train
+```
+
+- Chạy lượt kiểm cấu trúc và bảng visibility:
+
+```Python
+python3 tools/check_pose_labels.py --images dataset/images/train --labels dataset/labels/train
+python3 tools/visibility_report.py --labels dataset/labels/train --out outputs/visibility_report.json --markdown reports/visibility_report.md
+```
+
+- Kiểm chéo báo cáo visibility với một bạn cùng nhóm sau khi cả hai đã tự hoàn thành annotation:
+
+```Python
+python3 tools/visibility_report.py --labels dataset/labels/train --compare ../ban_cung_nhom/dataset/labels/train --markdown reports/visibility_compare.md
+```
+
+- Kiểm tra gold
+
+```Python
+python3 tools/evaluate_pose_annotations.py --pred dataset/labels/train --gold gold/labels/train --images dataset/images/train --out outputs/eval_vs_gold.json
+```
